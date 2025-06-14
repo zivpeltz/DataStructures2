@@ -7,6 +7,11 @@
 public class FibonacciHeap
 {
 	public HeapNode min;
+	private int size;
+	private int numOfTrees;
+	private int c;
+	private int totalCuts;
+	private int totalLinks;
 	
 	/**
 	 *
@@ -16,7 +21,12 @@ public class FibonacciHeap
 	 */
 	public FibonacciHeap(int c)
 	{
-		// should be replaced by student code
+		this.c = c;
+		this.min = null;
+		this.totalLinks = 0;
+		this.totalCuts = 0;
+		this.size = 0;
+		this.numOfTrees = 0;
 	}
 
 	/**
@@ -27,8 +37,43 @@ public class FibonacciHeap
 	 *
 	 */
 	public HeapNode insert(int key, String info) 
-	{    
-		return null; // should be replaced by student code
+	{
+		HeapNode node = createNewNode(key,info);
+
+		if (size == 0){ //initialize new heap
+			min = node;
+		}
+
+		else { //add into existing
+			insertInNodeList(node);
+			if (min.key > key){
+				min = node;
+			}
+		}
+		size++;
+
+		return node;
+	}
+
+	private void insertInNodeList(HeapNode node){
+		HeapNode tempNode = min.prev;
+		tempNode.next = node;
+		node.prev= tempNode;
+		min.prev = node;
+		node.next = min;
+
+		numOfTrees++;
+	}
+
+	private HeapNode createNewNode(int key, String info){
+		HeapNode node = new HeapNode();
+		node.key = key;
+		node.info = info;
+		node.rank = 0;
+		node.next = node;
+		node.prev = node;
+		node.sonsCut = 0;
+		return node;
 	}
 
 	/**
@@ -38,7 +83,7 @@ public class FibonacciHeap
 	 */
 	public HeapNode findMin()
 	{
-		return null; // should be replaced by student code
+		return min;
 	}
 
 	/**
@@ -63,9 +108,55 @@ public class FibonacciHeap
 	 */
 	public int decreaseKey(HeapNode x, int diff) 
 	{    
-		return 46; // should be replaced by student code
+		x.key -= diff;
+		if (isHeapOrderViolated(x)){
+			return cutNode(x);
+		}
+		return 0;
 	}
 
+
+	private int cutNode(HeapNode node){
+		HeapNode parent = node.parent;
+		if (parent.child == node){
+			if (node.next != node){
+				parent.child = node.next;
+			}
+			else{
+				parent.child = null;
+			}
+		}
+		node.parent = null;
+		removeFromList(node);
+		insertInNodeList(node);
+		parent.sonsCut++;
+
+		if (parent.sonsCut == c){
+			return 1 + cutNode(parent);
+		}
+		return 1;
+
+	}
+
+	private void removeFromList(HeapNode node)
+	{
+		HeapNode next = node.next;
+		HeapNode prev = node.prev;
+
+		next.prev = node.prev; //change next and prev
+		prev.next = node.next;
+
+		node.prev = node; //node points to itself now
+		node.next = node;
+
+	}
+
+	private boolean isHeapOrderViolated(HeapNode node)
+	{
+		if (node.parent == null){return false;}
+		HeapNode parent = node.parent;
+		return parent.key > node.key;
+	}
 	/**
 	 * 
 	 * Delete the x from the heap.
@@ -143,5 +234,6 @@ public class FibonacciHeap
 		public HeapNode prev;
 		public HeapNode parent;
 		public int rank;
+		public int sonsCut;
 	}
 }
