@@ -1,3 +1,6 @@
+import javax.swing.*;
+import java.util.ArrayList;
+
 /**
  * FibonacciHeap
  *
@@ -12,7 +15,7 @@ public class FibonacciHeap
 	private int c;
 	private int totalCuts;
 	private int totalLinks;
-	
+
 	/**
 	 *
 	 * Constructor to initialize an empty heap.
@@ -30,13 +33,13 @@ public class FibonacciHeap
 	}
 
 	/**
-	 * 
+	 *
 	 * pre: key > 0
 	 *
 	 * Insert (key,info) into the heap and return the newly generated HeapNode.
 	 *
 	 */
-	public HeapNode insert(int key, String info) 
+	public HeapNode insert(int key, String info)
 	{
 		HeapNode node = createNewNode(key,info);
 
@@ -76,7 +79,7 @@ public class FibonacciHeap
 	}
 
 	/**
-	 * 
+	 *
 	 * Return the minimal HeapNode, null if empty.
 	 *
 	 */
@@ -86,7 +89,7 @@ public class FibonacciHeap
 	}
 
 	/**
-	 * 
+	 *
 	 * Delete the minimal item.
 	 * Return the number of links.
 	 *
@@ -96,59 +99,89 @@ public class FibonacciHeap
 		int changes = totalLinks;
 		splitMin();
 		consolidate();
+		printTreeList();
 		return totalLinks - changes;
 
 	}
 
 
 	private void splitMin(){ //split min tree to its sub trees and add to Tree list
+		numOfTrees--;
+		size--;
+
 		HeapNode x = min;
 		min = x.next;
 		removeFromList(x);
+		int rank = x.rank;
 		x = x.child;
 		HeapNode y;
-		for ( int i = 0 ; i < x.rank ; i++){
+		for ( int i = 0 ; i < rank ; i++){
+			numOfTrees++;
 			y = x.next;
 			cutNode(x);
 			x = y;
 		}
+
 	}
 
 	private void consolidate(){
 		min = fromBuckets(toBuckets());
 	}
 
-	private HeapNode fromBuckets(HeapNode[] buckets){
+	private HeapNode fromBuckets(ArrayList<HeapNode> buckets){
 		HeapNode x = null;
 		numOfTrees = 0;
-		for (int i = 0; i <= (int)(Math.log(size) / Math.log((1 + Math.sqrt(5)) / 2)); i++){
-			if(buckets[i] != null){
+		for (int i = 0; i < buckets.size(); i++){
+			if(buckets.get(i) != null){
 				if (x == null){
-					x = buckets[i];
+					x = buckets.get(i);
 				}
 				else{
-					insertToList(x,buckets[i]);
+					insertToList(x,buckets.get(i));
 					numOfTrees++;
-					if (buckets[i].key < x.key) {x= buckets[i];}
+					if (buckets.get(i).key < x.key) {x = buckets.get(i);}
 				}
 			}
 		}
 		return x;
 	}
 
-	private HeapNode[] toBuckets(){
-		int n = (int)(Math.log(size) / Math.log((1 + Math.sqrt(5)) / 2));
-		HeapNode[] buckets = new HeapNode[n];
+	private ArrayList<HeapNode> toBuckets() {
+		int initialCapacity = (int)(Math.log(size) / Math.log((1 + Math.sqrt(5)) / 2));
+		ArrayList<HeapNode> buckets = new ArrayList<>(initialCapacity);
+
+		// Fill with nulls up to initialCapacity to avoid IndexOutOfBounds
+		for (int i = 0; i < initialCapacity; i++) {
+			buckets.add(null);
+		}
 		HeapNode x = min;
-		while (x != null){
+		while (x != null && x.next != x) {
 			HeapNode y = x;
 			x = x.next;
 			removeFromList(y);
-			while (buckets[y.rank]!= null){
-				y = link(y,buckets[y.rank]);
-				buckets[y.rank-1] = null;
+
+			// Ensure capacity for y.rank, and double if needed
+			while (y.rank >= buckets.size()) {
+				int newSize = buckets.size() * 2;
+				while (buckets.size() < newSize) {
+					buckets.add(null);
+				}
 			}
-			buckets[y.rank] = y;
+
+			while (buckets.get(y.rank) != null) {
+				y = link(y, buckets.get(y.rank));
+				buckets.set(y.rank - 1, null);
+
+				// Ensure capacity again after linking (rank increased)
+				while (y.rank >= buckets.size()) {
+					int newSize = buckets.size() * 2;
+					while (buckets.size() < newSize) {
+						buckets.add(null);
+					}
+				}
+			}
+
+			buckets.set(y.rank, y);
 		}
 		return buckets;
 	}
@@ -188,15 +221,15 @@ public class FibonacciHeap
 	}
 
 	/**
-	 * 
+	 *
 	 * pre: 0<diff<x.key
-	 * 
+	 *
 	 * Decrease the key of x by diff and fix the heap.
 	 * Return the number of cuts.
-	 * 
+	 *
 	 */
-	public int decreaseKey(HeapNode x, int diff) 
-	{    
+	public int decreaseKey(HeapNode x, int diff)
+	{
 		x.key -= diff;
 		if (isHeapOrderViolated(x)) {
 			return cutNode(x);
@@ -223,9 +256,11 @@ public class FibonacciHeap
 				parent.child = null;
 			}
 		}
+
 		node.parent = null;
 		removeFromList(node);
 		insertInTreeList(node);
+
 		parent.sonsCut++;
 		parent.rank -= 1;
 		totalCuts++;
@@ -239,6 +274,7 @@ public class FibonacciHeap
 
 	private void removeFromList(HeapNode node)
 	{
+
 		HeapNode next = node.next;
 		HeapNode prev = node.prev;
 
@@ -257,21 +293,22 @@ public class FibonacciHeap
 		return parent.key > node.key;
 	}
 	/**
-	 * 
+	 *
 	 * Delete the x from the heap.
 	 * Return the number of links.
 	 *
 	 */
-	public int delete(HeapNode x) 
-	{    
-		return 46; // should be replaced by student code
+	public int delete(HeapNode x)
+	{
+		decreaseKey(x,x.key+1);
+		return deleteMin();
 	}
 
 
 	/**
-	 * 
+	 *
 	 * Return the total number of links.
-	 * 
+	 *
 	 */
 	public int totalLinks()
 	{
@@ -280,9 +317,9 @@ public class FibonacciHeap
 
 
 	/**
-	 * 
+	 *
 	 * Return the total number of cuts.
-	 * 
+	 *
 	 */
 	public int totalCuts()
 	{
@@ -291,7 +328,7 @@ public class FibonacciHeap
 
 
 	/**
-	 * 
+	 *
 	 * Meld the heap with heap2
 	 *
 	 */
@@ -313,9 +350,9 @@ public class FibonacciHeap
 	}
 
 	/**
-	 * 
+	 *
 	 * Return the number of elements in the heap
-	 *   
+	 *
 	 */
 	public int size()
 	{
@@ -324,9 +361,9 @@ public class FibonacciHeap
 
 
 	/**
-	 * 
+	 *
 	 * Return the number of trees in the heap.
-	 * 
+	 *
 	 */
 	public int numTrees()
 	{
@@ -335,7 +372,7 @@ public class FibonacciHeap
 
 	/**
 	 * Class implementing a node in a Fibonacci Heap.
-	 *  
+	 *
 	 */
 	public static class HeapNode{
 		public int key;
@@ -347,4 +384,24 @@ public class FibonacciHeap
 		public int rank;
 		public int sonsCut;
 	}
+	public void printTreeList(){
+		HeapNode temp = this.min;
+		HeapNode end = this.min.prev;
+		String str = "" + temp.key + " --> ";
+		temp = temp.next;
+		while (temp != end){
+			str = str + temp.key + " --> ";
+			if (temp.next == end){
+				str = str + temp.next.key;
+			}
+			temp = temp.next;
+		}
+		System.out.println(str);
+	}
+	public void visualize() {
+		SwingUtilities.invokeLater(() -> {
+			new FibonacciHeapVisualizer(this).setVisible(true);
+		});
+	}
+
 }
