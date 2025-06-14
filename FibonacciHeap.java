@@ -196,14 +196,16 @@ public class FibonacciHeap {
 	 *
 	 */
 	public int decreaseKey(HeapNode x, int diff) {
-		if (x == null || diff <= 0) throw new IllegalArgumentException();
+		if (x == null) throw new IllegalArgumentException();
+		// We rely on pre-condition: 0<diff<x.key
+		int cutsBefore = totalCuts;
 		x.key -= diff;
 		if (isHeapOrderViolated(x)) {
 			cutNode(x);
 		} else if (x.key < min.key) {
 			min = x;
 		}
-		return totalCuts;
+		return totalCuts - cutsBefore;
 	}
 
 	private void cutNode(HeapNode x) {
@@ -243,7 +245,7 @@ public class FibonacciHeap {
 	 *
 	 */
 	public int delete(HeapNode x) {
-		decreaseKey(x, x.key + 1);
+		decreaseKey(x, x.key);
 		return deleteMin();
 	}
 
@@ -318,4 +320,3 @@ public class FibonacciHeap {
 		public int sonsCut;
 	}
 }
-
