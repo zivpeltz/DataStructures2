@@ -130,6 +130,7 @@ public class FibonacciHeap
 		removeFromList(node);
 		insertInNodeList(node);
 		parent.sonsCut++;
+		totalCuts++;
 
 		if (parent.sonsCut == c){
 			return 1 + cutNode(parent);
@@ -176,7 +177,7 @@ public class FibonacciHeap
 	 */
 	public int totalLinks()
 	{
-		return 46; // should be replaced by student code
+		return totalLinks;
 	}
 
 
@@ -187,7 +188,7 @@ public class FibonacciHeap
 	 */
 	public int totalCuts()
 	{
-		return 46; // should be replaced by student code
+		return totalCuts;
 	}
 
 
@@ -208,7 +209,7 @@ public class FibonacciHeap
 	 */
 	public int size()
 	{
-		return 46; // should be replaced by student code
+		return size;
 	}
 
 
@@ -219,7 +220,7 @@ public class FibonacciHeap
 	 */
 	public int numTrees()
 	{
-		return 46; // should be replaced by student code
+		return numOfTrees;
 	}
 
 	/**
