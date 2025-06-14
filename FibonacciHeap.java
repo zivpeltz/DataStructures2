@@ -196,9 +196,21 @@ public class FibonacciHeap
 	 * Meld the heap with heap2
 	 *
 	 */
-	public void meld(FibonacciHeap heap2)
-	{
-		return; // should be replaced by student code   		
+	public void meld(FibonacciHeap heap2) {
+		HeapNode tempMin = this.min;
+		if (heap2.min.key<this.min.key){
+			tempMin = heap2.min;
+		}
+		HeapNode temp1 = this.min.next;
+		HeapNode temp2 = heap2.min.prev;
+
+		this.min.next = temp2;
+		temp2.prev = this.min;
+
+		heap2.min.next = temp1;
+		temp1.prev = heap2.min.next;
+
+		this.min = tempMin;
 	}
 
 	/**
@@ -208,7 +220,7 @@ public class FibonacciHeap
 	 */
 	public int size()
 	{
-		return 46; // should be replaced by student code
+		return this.size; // should be replaced by student code
 	}
 
 
@@ -219,7 +231,7 @@ public class FibonacciHeap
 	 */
 	public int numTrees()
 	{
-		return 46; // should be replaced by student code
+		return this.numOfTrees; // should be replaced by student code
 	}
 
 	/**
