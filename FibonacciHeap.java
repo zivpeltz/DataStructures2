@@ -45,23 +45,22 @@ public class FibonacciHeap
 		}
 
 		else { //add into existing
-			insertInNodeList(node);
-			if (min.key > key){
-				min = node;
-			}
+			insertInTreeList(node);
 		}
 		size++;
 
 		return node;
 	}
 
-	private void insertInNodeList(HeapNode node){
+	private void insertInTreeList(HeapNode node){
 		HeapNode tempNode = min.prev;
 		tempNode.next = node;
 		node.prev= tempNode;
 		min.prev = node;
 		node.next = min;
-
+		if (min.key > node.key){
+			min = node;
+		}
 		numOfTrees++;
 	}
 
@@ -94,8 +93,98 @@ public class FibonacciHeap
 	 */
 	public int deleteMin()
 	{
-		return 46; // should be replaced by student code
+		int changes = totalLinks;
+		splitMin();
+		consolidate();
+		return totalLinks - changes;
 
+	}
+
+
+	private void splitMin(){ //split min tree to its sub trees and add to Tree list
+		HeapNode x = min;
+		min = x.next;
+		removeFromList(x);
+		x = x.child;
+		HeapNode y;
+		for ( int i = 0 ; i < x.rank ; i++){
+			y = x.next;
+			cutNode(x);
+			x = y;
+		}
+	}
+
+	private void consolidate(){
+		min = fromBuckets(toBuckets());
+	}
+
+	private HeapNode fromBuckets(HeapNode[] buckets){
+		HeapNode x = null;
+		numOfTrees = 0;
+		for (int i = 0; i <= (int)(Math.log(size) / Math.log((1 + Math.sqrt(5)) / 2)); i++){
+			if(buckets[i] != null){
+				if (x == null){
+					x = buckets[i];
+				}
+				else{
+					insertToList(x,buckets[i]);
+					numOfTrees++;
+					if (buckets[i].key < x.key) {x= buckets[i];}
+				}
+			}
+		}
+		return x;
+	}
+
+	private HeapNode[] toBuckets(){
+		int n = (int)(Math.log(size) / Math.log((1 + Math.sqrt(5)) / 2));
+		HeapNode[] buckets = new HeapNode[n];
+		HeapNode x = min;
+		while (x != null){
+			HeapNode y = x;
+			x = x.next;
+			removeFromList(y);
+			while (buckets[y.rank]!= null){
+				y = link(y,buckets[y.rank]);
+				buckets[y.rank-1] = null;
+			}
+			buckets[y.rank] = y;
+		}
+		return buckets;
+	}
+
+	private HeapNode link(HeapNode node1, HeapNode node2){
+		totalLinks++;
+		HeapNode tempMin = node1;
+		HeapNode tempMax = node2;
+		if (node1.key > node2.key){
+			tempMin = node2;
+			tempMax = node1;
+		}
+		addToChildList(tempMin,tempMax);
+		return tempMin;
+	}
+
+	private void addToChildList(HeapNode parent, HeapNode child){
+		parent.rank += 1;
+		if (parent.child == null){
+			parent.child = child;
+			child.parent = parent;
+		}
+		else{
+			HeapNode tempChild = parent.child;
+			insertToList(tempChild,child);
+		}
+	}
+
+	private void insertToList(HeapNode head , HeapNode node)
+	{
+		node.next = head.next;
+		node.prev = head;
+		head.next = node;
+		node.next.prev = node;
+
+		node.parent = head.parent;
 	}
 
 	/**
@@ -109,8 +198,15 @@ public class FibonacciHeap
 	public int decreaseKey(HeapNode x, int diff) 
 	{    
 		x.key -= diff;
-		if (isHeapOrderViolated(x)){
+		if (isHeapOrderViolated(x)) {
 			return cutNode(x);
+		}
+		else{
+			if (x.parent == null){
+				if (min.key > x.key){
+					min = x;
+				}
+			}
 		}
 		return 0;
 	}
@@ -118,6 +214,7 @@ public class FibonacciHeap
 
 	private int cutNode(HeapNode node){
 		HeapNode parent = node.parent;
+		node.sonsCut = 0;
 		if (parent.child == node){
 			if (node.next != node){
 				parent.child = node.next;
@@ -128,11 +225,12 @@ public class FibonacciHeap
 		}
 		node.parent = null;
 		removeFromList(node);
-		insertInNodeList(node);
+		insertInTreeList(node);
 		parent.sonsCut++;
+		parent.rank -= 1;
 		totalCuts++;
-
 		if (parent.sonsCut == c){
+			parent.sonsCut = 0;
 			return 1 + cutNode(parent);
 		}
 		return 1;
